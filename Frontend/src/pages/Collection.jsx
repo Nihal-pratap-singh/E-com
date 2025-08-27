@@ -16,17 +16,17 @@ const Collection = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [products, selectedCategories, selectedTypes, selectedPriceRange, sortOption, search, showSearch]);
+  }, [selectedCategories, selectedTypes, selectedPriceRange, sortOption, search, showSearch, products]);
 
   const handleCategoryChange = (e) => {
-    const value = e.target.value;
+    const value = e.target.value.toLowerCase();
     setSelectedCategories((prev) =>
       prev.includes(value) ? prev.filter((cat) => cat !== value) : [...prev, value]
     );
   };
 
   const handleTypeChange = (e) => {
-    const value = e.target.value;
+    const value = e.target.value.toLowerCase();
     setSelectedTypes((prev) =>
       prev.includes(value) ? prev.filter((type) => type !== value) : [...prev, value]
     );
@@ -35,6 +35,11 @@ const Collection = () => {
   const applyFilters = () => {
     let filtered = [...products];
 
+    // Debug: Log the first product to see its structure
+    if (products.length > 0) {
+      console.log('Sample product structure:', products[0]);
+    }
+
     // Search Filter
     if (showSearch && search) {
       filtered = filtered.filter(item =>
@@ -42,29 +47,59 @@ const Collection = () => {
       );
     }
 
-    // Category filter
+    // Category filter (case-insensitive)
     if (selectedCategories.length > 0) {
-      filtered = filtered.filter((item) => selectedCategories.includes(item.category));
+      filtered = filtered.filter((item) => {
+        const itemCategory = (item.category || '').toLowerCase();
+        return selectedCategories.includes(itemCategory);
+      });
     }
 
-    // Type filter
+    // Type filter (case-insensitive) - IMPROVED VERSION
     if (selectedTypes.length > 0) {
-      filtered = filtered.filter((item) => selectedTypes.includes(item.subCategory));
+      filtered = filtered.filter((item) => {
+        // Check multiple possible property names and convert to lowercase
+        const subCategory = (item.subCategory || '').toLowerCase();
+        const category = (item.category || '').toLowerCase();
+        const type = (item.type || '').toLowerCase();
+        
+        // Debug: Log what we're comparing
+        console.log('Checking item:', {
+          subCategory,
+          category,
+          type,
+          selectedTypes
+        });
+        
+        // Check if any selected type matches any of the item's type properties
+        return selectedTypes.some(selectedType => 
+          subCategory === selectedType || 
+          category === selectedType || 
+          type === selectedType ||
+          subCategory.includes(selectedType) ||
+          category.includes(selectedType) ||
+          type.includes(selectedType)
+        );
+      });
     }
 
     // Price range filter
     if (selectedPriceRange) {
       const [min, max] = selectedPriceRange.split('-').map(Number);
-      filtered = filtered.filter((item) => item.price >= min && item.price <= max);
+      filtered = filtered.filter((item) => {
+        const price = Number(item.price);
+        return price >= min && price <= max;
+      });
     }
 
     // Sorting
     if (sortOption === 'low-high') {
-      filtered.sort((a, b) => a.price - b.price);
+      filtered.sort((a, b) => Number(a.price) - Number(b.price));
     } else if (sortOption === 'high-low') {
-      filtered.sort((a, b) => b.price - a.price);
+      filtered.sort((a, b) => Number(b.price) - Number(a.price));
     }
 
+    console.log('Final filtered products:', filtered.length);
     setFilterProducts(filtered);
   };
 
@@ -94,7 +129,7 @@ const Collection = () => {
                   className='w-3'
                   type='checkbox'
                   value={category}
-                  checked={selectedCategories.includes(category)}
+                  checked={selectedCategories.includes(category.toLowerCase())}
                   onChange={handleCategoryChange}
                 />
                 {category}
@@ -103,7 +138,7 @@ const Collection = () => {
           </div>
         </div>
 
-        {/* Type Filter */}
+        {/* Type Filter - UPDATED */}
         <div className={`border border-gray-300 pl-5 py-3 my-5 ${showFilter ? '' : 'hidden'} sm:block`}>
           <p className='mb-3 text-sm font-light text-gray-700'>Type</p>
           <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
@@ -112,13 +147,21 @@ const Collection = () => {
                 <input
                   className='w-3'
                   type='checkbox'
-                  value={type}
-                  checked={selectedTypes.includes(type)}
+                  value={type.toLowerCase()}
+                  checked={selectedTypes.includes(type.toLowerCase())}
                   onChange={handleTypeChange}
                 />
                 {type}
+                {/* Debug info - remove this in production */}
+                <span className='text-xs text-gray-400 ml-2'>
+                  ({selectedTypes.includes(type.toLowerCase()) ? '✓' : '○'})
+                </span>
               </label>
             ))}
+          </div>
+          {/* Debug info - remove this in production */}
+          <div className='mt-2 text-xs text-gray-400'>
+            Selected: {selectedTypes.join(', ')}
           </div>
         </div>
 
@@ -168,7 +211,16 @@ const Collection = () => {
             ))}
           </div>
         ) : (
-          <p className='text-center text-gray-500 mt-8'>No products found matching your filters.</p>
+          <div className='text-center text-gray-500 mt-8'>
+            <p>No products found matching your filters.</p>
+            {/* Debug info - remove this in production */}
+            <div className='text-xs mt-2'>
+              <p>Total products: {products.length}</p>
+              <p>Selected categories: {selectedCategories.join(', ') || 'None'}</p>
+              <p>Selected types: {selectedTypes.join(', ') || 'None'}</p>
+              <p>Price range: {selectedPriceRange || 'All'}</p>
+            </div>
+          </div>
         )}
       </div>
     </div>
