@@ -3,6 +3,7 @@ import userModel from "../models/UserModel.js";
 
 /////// placing order on cod
 const placeOrder = async (req, res) => {
+  console.log("orderkrne aaya")
   try {
     const { userId, items, amount, address } = req.body;
     const orderData = {
@@ -14,6 +15,8 @@ const placeOrder = async (req, res) => {
       payment: false,
       Date: Date.now()   // <-- match your schema: 'Date' not 'date'
     };
+
+    if(!userId) return res.status(400).send({statusCode:400, message:"User Id bhej lvde"})
 
     const newOrder = new orderModel(orderData);
     await newOrder.save();

@@ -21,7 +21,6 @@ const PlaceOrder = () => {
   } = useContext(ShopContext);
 
   const [method, setMethod] = useState('cod');
-
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -82,12 +81,12 @@ const PlaceOrder = () => {
         if (response.data.success) {
           toast.success("Order placed successfully!");
           setCartItems({});
-          navigate('/orders'); 
+          navigate('/orders');
         } else {
-          // toast.error(response.data.message || "Something went wrong.");
+          toast.error(response.data.message || "Something went wrong.");
         }
       } else {
-        // toast.error('Please select a valid payment method.');
+        toast.error('Please select a valid payment method.');
       }
 
     } catch (error) {
@@ -105,7 +104,7 @@ const PlaceOrder = () => {
       <div className="flex flex-col gap-4 w-full sm:max-w-[480px]">
         <Title text1={'DELIVERY'} text2={'INFORMATION'} />
         <div className="flex gap-3">
-          <input required name="firstName" value={formData.firstName} onChange={onChangeHandler} placeholder="First name" className="border rounded p-2 w-full" />
+          <input onChange={onChangeHandler} name="firstName" required value={formData.firstName} placeholder="First name" className="border rounded p-2 w-full" />
           <input required name="lastName" value={formData.lastName} onChange={onChangeHandler} placeholder="Last name" className="border rounded p-2 w-full" />
         </div>
         <input required name="email" value={formData.email} onChange={onChangeHandler} placeholder="Email" className="border rounded p-2 w-full" />
